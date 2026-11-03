@@ -1,408 +1,188 @@
-# Comprehensive Evaluation of Monocular and Multi-view 3D Human Pose Estimation Models for Fitness Exercise Analysis
-
-Repository accompanying the research article:
-
-> **Comprehensive Evaluation of Monocular and Multi-view 3D Human Pose Estimation Models for Fitness Exercise Analysis**
-
-The project provides a unified experimental framework for comparing recent monocular and multi-view deep learning approaches for three-dimensional human pose estimation on the **Fit3D** dataset.
-
-Three representative architectures from different 3D human pose estimation paradigms are evaluated:
-
-- **TCPFormer**, representing Transformer-based temporal 2D-to-3D lifting;
-- **PoseMamba-L**, representing State Space Model-based temporal 2D-to-3D lifting;
-- **MVGFormer**, representing geometry-aware multi-view 3D pose estimation.
-
-The monocular models are evaluated using three different sources of 2D keypoints: projected **ground-truth 2D keypoints**, **RTMPose**, and **YOLO-Pose**. MVGFormer instead operates directly on synchronized RGB images from four calibrated cameras.
-
-The evaluation considers both **spatial accuracy** and **temporal consistency**. Spatial reconstruction accuracy is measured using **PA-MPJPE**, while temporal stability is assessed using the **RMSE of joint velocities** with respect to the ground truth. In addition, three temporal post-processing techniques are evaluated: the **One Euro Filter**, **Savitzky--Golay Filter**, and **Median Filter**.
-
-The study also analyzes model complexity through the number of parameters and multiply--accumulate operations (MACs), as well as the influence of 2D detector quality, skeletal representation, exercise type, and temporal filtering on the final 3D reconstructions.
-
-## Project overview
-
-The experimental pipeline includes:
-
-- preparation of the Fit3D multi-view fitness sequences;
-- projection of Fit3D 3D ground-truth joints into a frontal camera for monocular evaluation;
-- extraction of 2D keypoints using RTMPose and YOLO-Pose;
-- conversion of 2D detections to the Human3.6M 17-joint representation;
-- monocular 3D pose reconstruction with TCPFormer and PoseMamba-L;
-- multi-view 3D pose reconstruction with MVGFormer using synchronized RGB images and camera calibration;
-- conversion of the different skeletal representations to a common joint convention when required;
-- calculation of spatial reconstruction accuracy using PA-MPJPE;
-- evaluation of temporal consistency using velocity RMSE;
-- application of One Euro, Savitzky--Golay, and Median temporal filters;
-- comparison of filtered and unfiltered 3D pose sequences;
-- per-subject, per-exercise, and per-joint analysis;
-- qualitative visualization of reconstructed 3D poses and temporal trajectories.
-
-The main objective is to provide a unified benchmark in which the behavior of monocular temporal models and multi-view geometric reconstruction can be analyzed under the same Fit3D-based evaluation framework.
-
-## Dataset
-
-The dataset is not included in this repository due to its size and licensing conditions.
-
-The experiments use the publicly available **Fit3D** dataset, which was specifically designed for 3D human motion analysis in fitness scenarios.
-
-Fit3D contains:
-
-- **13 subjects** performing fitness exercises;
-- **47 exercise types** grouped into warm-up, barbell, dumbbell, and equipment-free exercises;
-- **611 multi-view sequences**;
-- recordings from **four synchronized RGB cameras**;
-- RGB resolution of **900 × 900 pixels**;
-- a recording frame rate of **50 fps**;
-- 3D ground-truth poses captured using a **12-camera Vicon motion-capture system**;
-- ground-truth skeletons containing **25 joints**;
-- intrinsic and extrinsic camera calibration parameters.
-
-The dataset defines an official training and test split. Since the 3D ground truth of the test split is withheld for the online benchmark, the experiments in this work use the eight training subjects for which complete annotations are available:
-
-```text
-s03, s04, s05, s07, s08, s09, s10, s11
-
-## Experimental setup
-
-The benchmark follows a common evaluation protocol across all methods in order to minimize differences caused by data preparation or evaluation procedures.
-
-Two different 3D pose estimation pipelines are considered.
-
-### Monocular pipeline
-
-For TCPFormer and PoseMamba-L, a single frontal Fit3D camera is used.
-
-The monocular pipeline includes:
-
-1. obtaining 2D keypoints from projected ground truth, RTMPose, or YOLO-Pose;
-2. converting the detected keypoints to the Human3.6M 17-joint representation;
-3. processing temporal windows of **243 frames**;
-4. reconstructing the corresponding 3D pose sequence;
-5. aligning the predictions with the Fit3D ground truth for evaluation.
-
-### Multi-view pipeline
-
-MVGFormer directly processes:
-
-1. synchronized RGB images from the four Fit3D cameras;
-2. the corresponding intrinsic and extrinsic camera calibration parameters;
-3. the multi-view observations for each time instant independently;
-4. the resulting 3D pose predictions converted to the common 15-joint representation used for comparison.
-
-Unlike TCPFormer and PoseMamba-L, MVGFormer does not explicitly model temporal continuity between consecutive frames.
-
-### Temporal post-processing
-
-After inference, the reconstructed 3D trajectories can optionally be processed using:
-
-- One Euro Filter;
-- Savitzky--Golay Filter;
-- Median Filter.
-
-Each filter is applied independently to every coordinate of every joint trajectory.
-
-The same evaluation procedure is then used to compare the original and filtered predictions in terms of spatial accuracy and temporal consistency.
-
-## Model architectures
-
-Three representative 3D human pose estimation architectures are evaluated, covering complementary modeling paradigms.
-
-### TCPFormer
-
-TCPFormer is a monocular 2D-to-3D lifting model based on Transformer architectures.
-
-The model introduces an **implicit pose proxy** that summarizes temporal information and facilitates the modeling of long-range dependencies across the input sequence.
-
-In this benchmark, TCPFormer receives sequences of **243 frames of 2D keypoints** and predicts the corresponding 3D pose sequence.
-
-### PoseMamba-L
-
-PoseMamba-L is a monocular 3D pose estimation architecture based on **State Space Models** and the Mamba framework.
-
-Instead of relying on conventional self-attention, it uses bidirectional spatio-temporal state-space operations to model dependencies across joints and frames.
-
-This design reduces computational complexity while maintaining long-range temporal modeling capabilities.
-
-As with TCPFormer, the model receives sequences of **243 frames of 2D keypoints**.
-
-### MVGFormer
-
-MVGFormer is a multi-view 3D human pose estimation architecture that combines deep visual features with explicit multi-view geometry.
-
-The model integrates:
-
-- a convolutional image backbone;
-- Transformer-based pose queries;
-- camera calibration information;
-- differentiable triangulation.
-
-Unlike the monocular models, MVGFormer receives synchronized RGB images from multiple calibrated cameras and reconstructs the 3D pose directly from the multi-view observations.
-
-The model operates **frame by frame**, without explicitly modeling temporal dependencies between consecutive frames.
-
-### Model summary
-
-| Model | Paradigm | Input | Temporal modeling | Parameters | MACs |
-|---|---|---|---|---:|---:|
-| TCPFormer | Transformer-based monocular lifting | 2D keypoint sequence (`T = 243`) | Temporal attention | 35.1 M | 449 M/frame |
-| PoseMamba-L | State Space Model-based monocular lifting | 2D keypoint sequence (`T = 243`) | Bidirectional state-space modeling | 6.7 M | 115 M/frame |
-| MVGFormer | Geometry-aware multi-view reconstruction | Multi-view RGB + camera calibration | None, frame-wise | 37.6 M | 639.7 G* |
-
-\* For MVGFormer, the reported MACs correspond to one frame-wise multi-view inference in the original experimental configuration.
-
-## Evaluation metrics
-
-The benchmark evaluates two complementary aspects of 3D pose estimation performance:
-
-- spatial reconstruction accuracy;
-- temporal consistency of the predicted motion.
-
-### PA-MPJPE
-
-Spatial accuracy is measured using the **Procrustes-Aligned Mean Per Joint Position Error (PA-MPJPE)**.
-
-Before computing the error, the predicted pose is aligned with the ground truth through a similarity transformation including:
-
-- translation;
-- rotation;
-- scale.
-
-The metric is expressed in **millimeters (mm)**, and lower values indicate better 3D reconstruction accuracy.
-
-PA-MPJPE is computed over the corresponding skeletal representation used by each model:
-
-- TCPFormer: 17 Human3.6M joints;
-- PoseMamba-L: 17 Human3.6M joints;
-- MVGFormer: 15 common joints.
-
-For the per-joint comparison between all three models, the predictions are converted to the shared **COMMON15** representation.
-
-### Velocity RMSE
-
-Temporal consistency is evaluated using the **Root Mean Square Error of joint velocities with respect to the ground truth**.
-
-For each joint, velocity is computed as the Euclidean displacement between consecutive frames:
-
-\[
-v_{t,j}(X) = \|X_{t,j} - X_{t-1,j}\|_2
-\]
-
-The velocity error is then computed as:
-
-\[
-RMSE_{vel} =
-\sqrt{
-\frac{1}{(T-1)J}
-\sum_{t=2}^{T}
-\sum_{j=1}^{J}
-\left(
-v_{t,j}(\hat{Y}) - v_{t,j}(Y)
-\right)^2
-}
-\]
-
-The metric is reported in **mm/frame**, with lower values indicating better temporal consistency.
-
-This metric makes it possible to detect frame-to-frame instability, jitter, or abrupt changes that may not be reflected by frame-wise spatial metrics such as PA-MPJPE.
-
-The temporal evaluation is performed both before and after applying the evaluated post-processing filters.
-
-## Computational evaluation
-
-In addition to reconstruction accuracy and temporal consistency, the benchmark considers the computational complexity of the evaluated 3D pose estimation architectures.
-
-The following indicators are reported:
-
-- number of model parameters;
-- multiply--accumulate operations (MACs);
-- temporal processing strategy;
-- input modality required by each architecture.
-
-The reported values are taken from the original model publications.
-
-For TCPFormer and PoseMamba-L, MACs/frame represent the computational cost per output frame for a 243-frame input sequence.
-
-For MVGFormer, the reported MACs correspond to one frame-wise multi-view inference in the original experimental configuration.
-
-| Model | Parameters | MACs | Input |
-|---|---:|---:|---|
-| TCPFormer | 35.1 M | 449 M/frame | 2D keypoint sequence |
-| PoseMamba-L | 6.7 M | 115 M/frame | 2D keypoint sequence |
-| MVGFormer | 37.6 M | 639.7 G* | Multi-view RGB + calibration |
-
-\* MVGFormer MACs correspond to one multi-view frame-wise inference in the configuration reported by the original authors.
-
-PoseMamba-L is considerably lighter than TCPFormer, requiring approximately **five times fewer parameters** and **four times fewer operations per output frame**.
-
-MVGFormer has a substantially higher computational cost because it processes RGB images from multiple cameras and performs image feature extraction together with multi-view geometric reconstruction.
-
-The computational values reported here are intended to characterize model complexity rather than direct execution speed, since runtime also depends on hardware, implementation details, input resolution, and software configuration.
-
-## Analysis and visualization resources
-
-The project includes several resources for quantitative analysis and qualitative visualization of the 3D pose estimation results.
-
-These include:
-
-- **Per-exercise analysis:** comparison of PA-MPJPE across the different Fit3D exercises for TCPFormer, PoseMamba-L, and MVGFormer.
-- **2D detector comparison:** analysis of the influence of ground-truth 2D keypoints, RTMPose, and YOLO-Pose on the monocular lifting models.
-- **Per-joint analysis:** comparison of reconstruction errors across individual body joints using the shared COMMON15 skeleton.
-- **Temporal analysis:** visualization of mean body velocity over time to identify jitter, abrupt frame-to-frame variations, and the effect of temporal filtering.
-- **Filter comparison:** quantitative and qualitative comparison of the One Euro, Savitzky--Golay, and Median filters.
-- **3D skeleton visualization:** representative frames comparing the ground truth with TCPFormer, PoseMamba-L, and MVGFormer predictions.
-- **Video demonstrations:** reconstructed 3D pose sequences showing the temporal behavior of the evaluated models and the effect of post-processing filters.
-
-Representative figures and videos are stored in the repository assets and are also used throughout this README to illustrate the main experimental findings.
+# Monocular vs. Multi-view 3D Human Pose Estimation for Fitness Exercise Analysis
+
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+![Python](https://img.shields.io/badge/python-3.12-blue)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.10-ee4c2c)
+
+Official code of the paper **"Comprehensive Evaluation of Monocular and Multi-view 3D Human Pose Estimation Models for Fitness Exercise Analysis"** (Néstor Ortega, Agustín Salgado, Javier Sánchez; CTIM–IUCES, University of Las Palmas de Gran Canaria). Paper under review (Pattern Recognition).
+
+<p align="center">
+  <img src="assets/graphical_abstract.png" width="900" alt="Evaluation pipeline: Fit3D, 2D keypoints, 3D lifting or multi-view reconstruction, temporal filtering and evaluation against mocap ground truth">
+</p>
+
+## Overview
+
+This repository contains the code needed to reproduce every number and figure of the paper. It evaluates, under a single protocol, three recent 3D human pose estimation models on **Fit3D**, a dataset of synchronized multi-view fitness recordings with motion-capture ground truth:
+
+| Model | Type | Input |
+|---|---|---|
+| [TCPFormer](https://doi.org/10.1609/aaai.v39i5.32583) | Transformer lifting (implicit pose proxy) | 2D keypoint sequence (T = 243) |
+| [PoseMamba-L](https://doi.org/10.1609/aaai.v39i4.32401) | State-space (Mamba) lifting | 2D keypoint sequence (T = 243) |
+| [MVGFormer](https://doi.org/10.1109/cvpr52733.2024.00074) | Multi-view, frame-wise | 4 synchronized RGB views |
+
+The study addresses three questions:
+
+1. **Influence of the 2D detector.** TCPFormer and PoseMamba-L are fed with ground-truth 2D keypoints, RTMPose detections and YOLO-Pose detections.
+2. **Monocular vs. multi-view.** The three models are compared on a common 15-joint skeleton (COMMON15).
+3. **Temporal post-processing.** One Euro, Savitzky–Golay and Median filters are applied to the 3D predictions, with parameters selected globally to minimize MPJVE under a PA-MPJPE constraint.
+
+All models are used with the checkpoints released by their authors, **without retraining or fine-tuning on Fit3D**.
+
+## Main results
+
+Mean PA-MPJPE (mm) over the 8 training subjects and 28 non-warm-up exercises (224 sequences per model). Lower is better.
+
+| Model / 2D input | 17-joint skeleton | COMMON15 |
+|---|---:|---:|
+| TCPFormer – GT 2D | 46.16 | – |
+| TCPFormer – YOLO-Pose | 93.61 | – |
+| TCPFormer – RTMPose | 70.89 | 69.57 |
+| PoseMamba-L – GT 2D | 37.12 | – |
+| PoseMamba-L – YOLO-Pose | 84.32 | – |
+| PoseMamba-L – RTMPose | 71.14 | 68.77 |
+| MVGFormer (multi-view) | – | 66.69 |
+
+Effect of temporal filtering on COMMON15 (RTMPose as 2D input for the monocular models):
+
+| Model | Version | PA-MPJPE (mm) | MPJVE (mm/frame) |
+|---|---|---:|---:|
+| TCPFormer | Original | 69.566 | 2.943 |
+| | One Euro | 69.713 | 2.913 |
+| | Savitzky–Golay | 69.555 | **2.874** |
+| | Median | 69.563 | 2.905 |
+| PoseMamba-L | Original | 68.768 | 2.859 |
+| | One Euro | 68.769 | 2.859 |
+| | Savitzky–Golay | 68.768 | **2.856** |
+| | Median | 68.768 | 2.858 |
+| MVGFormer | Original | 66.691 | 26.458 |
+| | One Euro | 67.091 | 6.550 |
+| | Savitzky–Golay | 62.102 | 4.905 |
+| | Median | **60.385** | **4.192** |
+
+Key findings: the quality of the 2D detector is the dominant factor for monocular lifting; MVGFormer has the lowest average spatial error but degrades on floor exercises and is far less temporally consistent; filtering reduces the MVGFormer velocity error by 84 % (and also its PA-MPJPE with the Median filter) while the gains for the monocular models are small.
+
+<p align="center">
+  <img src="assets/qualitative_man_maker.png" width="900" alt="Qualitative comparison of GT, TCPFormer, PoseMamba-L and MVGFormer on the man maker sequence">
+  <br><em>Qualitative comparison on the <code>man maker</code> sequence: MVGFormer struggles with floor-supported poses.</em>
+</p>
+
+<p align="center">
+  <img src="assets/filters_effect.gif" width="900" alt="Effect of the One Euro, Savitzky-Golay and Median filters on a 3D pose">
+  <br><em>MVGFormer on <code>band_pull_apart</code> (subject s03, seconds 5–10): ground truth, original prediction and the three filtered versions. The MPJVE shown is computed on this clip only.</em>
+</p>
 
 ## Repository structure
 
-The repository is currently organized around the documentation, experimental results, and visual resources associated with the benchmark:
-
 ```text
 fit3d-3d-pose-benchmark/
-├── assets/                         # Figures, images, GIFs, and videos
-│   ├── figures/                    # Figures used in the analysis
-│   ├── skeletons/                  # Joint-representation diagrams
-│   └── videos/                     # Qualitative video demonstrations
-├── docs/                           # Additional methodological documentation
-│   ├── dataset.md                  # Fit3D dataset description
-│   ├── models.md                   # Evaluated 3D pose estimation models
-│   ├── skeleton_mapping.md         # Joint conventions and COMMON15 mapping
-│   ├── metrics.md                  # Spatial and temporal evaluation metrics
-│   └── temporal_filtering.md       # Temporal post-processing methodology
-├── results/                        # Experimental results and analyses
-│   ├── spatial_results.md          # PA-MPJPE results
-│   ├── temporal_results.md         # Velocity RMSE and filtering results
-│   └── qualitative_results.md      # Representative qualitative comparisons
-├── LICENSE                         # Project license
-└── README.md                       # Main project documentation
-
-## Execution environment
-
-The experiments were developed using both local and cloud-based resources.
-
-Local development was performed on:
-
-```text
-OS: macOS Catalina 10.15.7
-Computer: iMac Retina 5K 27-inch (2020)
-CPU: 6-core Intel Core i5 @ 3.1 GHz
-RAM: 8 GB
-GPU: AMD Radeon Pro 5300
-GPU memory: 4 GB
+├── notebooks/
+│   ├── 00_prepare_2d_inputs.ipynb       # GT 2D projection, YOLO-Pose extraction, RTMPose format check
+│   ├── 01_tcpformer_inference.ipynb     # TCPFormer inference (overlap + Hann) and evaluation
+│   ├── 02_posemamba_inference.ipynb     # PoseMamba-L inference (overlap + Hann) and evaluation
+│   ├── 03_mvgformer_inference.ipynb     # MVGFormer multi-view inference and evaluation
+│   ├── 04_temporal_smoothing.ipynb      # Filter parameter search, filtered predictions, verification
+│   └── 05_evaluation_and_figures.ipynb  # Paper tables and figures
+├── assets/                              # Images used in this README
+├── results/                             # Per-sequence metrics (CSV) and a subset of 3D predictions
+├── requirements/                        # One requirements file per environment
+├── LICENSE
+├── CITATION.cff
+└── README.md
 ```
 
-Since the local machine does not provide CUDA support, the GPU-dependent experiments were mainly executed in **Google Colab** using the following environment:
+Each notebook runs end-to-end in Google Colab, the environment used for the paper, and reads/writes everything under a single `STORAGE_ROOT` (by default `/content/drive/MyDrive`). Locally, set `STORAGE_ROOT` to any directory. Notebooks can be opened in Colab directly from GitHub (*File → Open notebook → GitHub*).
+
+## Requirements
+
+The experiments were run on Google Colab with **Python 3.12**, **PyTorch 2.10**, **CUDA 12.8** and a **Tesla T4** GPU. NumPy, SciPy, Pandas, Matplotlib and OpenCV are used for pose processing, filtering, evaluation and visualization.
+
+Every model has its own dependencies, so the notebooks install them independently:
+
+| Notebook | Extra requirements |
+|---|---|
+| `00_prepare_2d_inputs` | `ultralytics` (YOLO-Pose), `opencv-python` |
+| `01_tcpformer_inference` | TCPFormer source code and Human3.6M checkpoint (243 frames) |
+| `02_posemamba_inference` | PoseMamba source code, compiled `selective_scan` CUDA kernels, PoseMamba-L checkpoint |
+| `03_mvgformer_inference` | MVGFormer source code, compiled deformable-attention CUDA operator, released checkpoint |
+| `04_temporal_smoothing`, `05_evaluation_and_figures` | NumPy, SciPy, Pandas, Matplotlib (no GPU) |
+
+> **Checkpoints and third-party code are not redistributed here.** Download them from the repositories of the original authors and follow their licenses. The notebooks indicate where each file must be placed.
+
+## Data
+
+1. **Fit3D.** Download the dataset from <https://fit3d.imar.ro> (academic license). The experiments use the eight subjects of the training split `s03, s04, s05, s07, s08, s09, s10, s11` and 28 exercises; warm-up sequences are excluded, giving **224 sequences per model**. Videos are 900 × 900 at 50 fps; the ground truth is `joints3d_25` (metres).
+2. **Expected layout:**
 
 ```text
-Python: 3.12.13
-PyTorch: 2.10.0
-CUDA: 12.8
-GPU: NVIDIA Tesla T4
+MyDrive/
+├── VIDEOS/<subject>/<exercise>/                  # videos and joints3d_25.json
+├── camera_params/<subject>/<camera_id>/<exercise>.json
+└── Fit3D_2D/<subject>/
+    ├── poses2d_gt/<exercise>.npy                 # GT projected to camera 65906101, (T, 17, 3)
+    ├── poses2d/<exercise>.npy                    # YOLO-Pose, H36M-17, (T, 17, 3)
+    └── pose2d_rtmpose/<exercise>.json            # RTMPose detections (MMPose JSON, COCO-17)
 ```
 
-The project uses **PyTorch** as the main deep learning framework for model inference.
+3. **2D inputs.** All monocular experiments use camera **65906101**, which provides a predominantly frontal view.
+   - *Ground-truth 2D:* projection of the 3D ground truth with the camera calibration (`00_prepare_2d_inputs`).
+   - *YOLO-Pose:* extracted from the videos with Ultralytics (`00_prepare_2d_inputs`).
+   - *RTMPose:* MMPose-style JSON files, one per sequence: a list of frames, each with a `frame_id` and its `instances` (`keypoints`, `keypoint_scores`, `bbox_score`) in COCO-17 order. The instance with the highest `bbox_score` is used, and frames without detections repeat the last valid pose. The detections are provided as input data; `00_prepare_2d_inputs` documents this format and validates the files.
 
-Additional libraries used throughout the experimental pipeline include:
+Detections in COCO-17 are converted to the 17-joint Human3.6M-like layout used by the lifting models (pelvis, neck and spine are computed as midpoints) and normalized following each model's input convention.
 
-- NumPy;
-- OpenCV;
-- Pandas;
-- Matplotlib;
-- SciPy.
+## Reproducing the paper
 
-For MVGFormer, the multi-view RGB images were processed at a resolution of:
+Run the notebooks in order:
 
-```text
-960 × 540
+1. **`00_prepare_2d_inputs`** – builds/validates the three 2D sources.
+2. **`01_tcpformer_inference`** and **`02_posemamba_inference`** – lift the 2D sequences to 3D. Sequences longer than 243 frames are processed with sliding windows (**window 243, stride 60**), fused with a strictly positive **Hann** weighting, with the last window anchored at the end of the sequence and pelvis root-centering applied after fusion. Run the three 2D sources (GT, YOLO-Pose, RTMPose) for each model.
+3. **`03_mvgformer_inference`** – multi-view, frame-wise reconstruction from the four cameras (960 × 540 network input with aspect-ratio-preserving affine transform).
+4. **`04_temporal_smoothing`** – applies the One Euro, Savitzky–Golay and Median filters to the RTMPose-based monocular predictions and to MVGFormer. The final parameters (below) are used by default; the full parameter search can be re-run with `RUN_PARAMETER_SEARCH = True`. The notebook verifies every generated file and checks that PA-MPJPE and MPJVE reproduce the values reported above.
+5. **`05_evaluation_and_figures`** – generates the tables and figures of the paper.
+
+### Filter parameters
+
+Selected globally per model and filter by minimizing the mean MPJVE over the 224 sequences, subject to a PA-MPJPE increase of at most 0.5 mm with respect to the original predictions.
+
+| Filter | TCPFormer | PoseMamba-L | MVGFormer |
+|---|---|---|---|
+| One Euro (f<sub>s</sub>, f<sub>c,min</sub>, β, f<sub>d</sub>) | (50, 10, 0.01, 2) | (50, 100, 0.01, 1) | (50, 1, 0.001, 1) |
+| Savitzky–Golay (N, p) | (21, 4) | (11, 4) | (21, 2) |
+| Median (N) | 5 | 3 | 41 |
+
+The One Euro filter acts on the arrays in their stored units (metres for TCPFormer/PoseMamba-L, millimetres for MVGFormer), which matters for β.
+
+## Evaluation protocol
+
+- **Skeletons.** TCPFormer and PoseMamba-L use a 17-joint skeleton; MVGFormer a 15-joint one. Joint-wise comparison uses **COMMON15**, which keeps the anatomically corresponding joints (Pelvis, Hips, Knees, Ankles, Neck, Nose, Shoulders, Elbows, Wrists) and discards Spine and Head.
+- **PA-MPJPE** – mean joint error after per-frame Procrustes alignment (spatial accuracy).
+- **MPJVE** – mean norm of the difference between predicted and ground-truth per-joint frame-to-frame displacements, in mm/frame, pelvis-centred, without Procrustes alignment or scale normalization. Because it compares velocity vectors, it is computed in a consistent frame: the monocular predictions are expressed in the frame of camera 65906101 and MVGFormer in the world frame.
+- **Mean-velocity plots** – a single body-scale factor per sequence (ratio of mean bone lengths, ground truth over original prediction) is applied to original and filtered predictions; this normalization is not used for MPJVE.
+
+## Provided results
+
+`results/` contains the per-sequence metrics (CSV) behind every table and a subset of the 3D predictions used in the temporal-smoothing experiments. The complete set of predictions can be regenerated with the notebooks.
+
+## Citation
+
+If you use this code, please cite the paper:
+
+```bibtex
+@article{ortega2026fit3dbenchmark,
+  title   = {Comprehensive Evaluation of Monocular and Multi-view 3D Human Pose Estimation Models for Fitness Exercise Analysis},
+  author  = {Ortega, N{\'e}stor and Salgado, Agust{\'i}n and S{\'a}nchez, Javier},
+  journal = {Pattern Recognition},
+  year    = {2026},
+  note    = {Under review}
+}
 ```
 
-together with the corresponding camera calibration parameters.
-
-The required Deformable Attention CUDA components were compiled in the Google Colab environment, and the model used the provided T-pose query initialization.
-
-## Installation
-
-The repository is currently focused on the documentation, experimental methodology, results, and qualitative resources associated with the benchmark.
-
-The implementation and processing scripts used to reproduce the experiments are not yet included in the public repository. Therefore, no installation procedure is currently required.
-
-Once the source code is released, the repository will include the corresponding dependency files and setup instructions for:
-
-- TCPFormer;
-- PoseMamba-L;
-- MVGFormer;
-- RTMPose;
-- YOLO-Pose;
-- evaluation utilities;
-- temporal filtering utilities.
-
-Specific compatibility notes will also be provided for MVGFormer, since its original implementation requires additional CUDA components for Deformable Attention.
-
-## Configuration
-
-The public repository is currently focused on the experimental documentation, results, and visualization resources associated with the benchmark.
-
-The configuration files and executable scripts used during the experiments are not yet included in the repository.
-
-The experimental setup described in this repository follows the configuration used in the associated study, including:
-
-- Fit3D subjects: `s03`, `s04`, `s05`, `s07`, `s08`, `s09`, `s10`, and `s11`;
-- monocular temporal window length: `243` frames;
-- monocular 2D input sources: projected ground truth, RTMPose, and YOLO-Pose;
-- MVGFormer input: four synchronized RGB views with camera calibration;
-- MVGFormer image resolution: `960 × 540`;
-- spatial evaluation metric: PA-MPJPE;
-- temporal evaluation metric: velocity RMSE;
-- temporal filters: One Euro, Savitzky--Golay, and Median.
-
-The corresponding configuration files and command-line options will be documented when the implementation is publicly released.
-
-## Usage
-
-The repository includes the Jupyter notebooks used to reproduce the main experimental pipelines described in the study.
-
-The notebooks cover:
-
-- Fit3D data preparation and preprocessing;
-- 2D pose extraction with RTMPose and YOLO-Pose;
-- TCPFormer inference;
-- PoseMamba-L inference;
-- MVGFormer multi-view inference;
-- skeletal representation conversion and joint mapping;
-- PA-MPJPE evaluation;
-- velocity RMSE evaluation;
-- temporal filtering;
-- quantitative result aggregation;
-- qualitative visualization and figure generation.
-
-Each notebook contains the configuration and processing steps required for the corresponding experiment.
-
-Because the evaluated models rely on different original implementations and dependency requirements, the notebooks are organized separately rather than being executed through a single unified command.
-
-Additional usage instructions and dependency notes are provided within the corresponding notebooks.
-
-## Third-party code and attribution
-
-This project uses and adapts components from the official implementations of the models and tools evaluated in the study, including:
-
-- **TCPFormer**;
-- **PoseMamba**;
-- **MVGFormer**;
-- **RTMPose**;
-- **YOLO-Pose**.
-
-The original pretrained models, source code, and external dependencies remain subject to their respective licenses and terms of use.
-
-The **Fit3D** dataset is not redistributed as part of this repository and must be obtained separately from its official source under the corresponding dataset license.
-
-Detailed references to the original repositories, publications, and third-party licenses are provided in the project documentation and in the `NOTICE` file.
-
----
+Please also cite Fit3D ([AIFit, CVPR 2021](https://doi.org/10.1109/cvpr46437.2021.00979)) and the original papers of the evaluated models and detectors.
 
 ## License
 
-This project is licensed under the **Apache License 2.0**.
+The code in this repository is released under the [Apache License 2.0](LICENSE). Fit3D is distributed under its own academic license, and the third-party models, checkpoints and detectors keep the licenses of their original authors.
 
-See the `LICENSE` file for more information.
+## Acknowledgements
 
-Third-party code, pretrained models, datasets, and other external resources are not covered by this repository's Apache 2.0 license unless explicitly stated, and remain subject to their original licenses and terms of use.
+This work was supported by MICIU/AEI/10.13039/501100011033/FEDER, UE (grant PID2024-155753OB-I00).
