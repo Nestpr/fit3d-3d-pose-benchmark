@@ -62,11 +62,6 @@ Effect of temporal filtering on COMMON15 (RTMPose as 2D input for the monocular 
 Key findings: the quality of the 2D detector is the dominant factor for monocular lifting; MVGFormer has the lowest average spatial error but degrades on floor exercises and is far less temporally consistent; filtering reduces the MVGFormer velocity error by 84 % (and also its PA-MPJPE with the Median filter) while the gains for the monocular models are small.
 
 <p align="center">
-  <img src="assets/qualitative_man_maker.png" width="900" alt="Qualitative comparison of GT, TCPFormer, PoseMamba-L and MVGFormer on the man maker sequence">
-  <br><em>Qualitative comparison on the <code>man maker</code> sequence: MVGFormer struggles with floor-supported poses.</em>
-</p>
-
-<p align="center">
   <img src="assets/mvgformer_s03_band_pull_apart_filters_5s-10s.gif" width="900" alt="Effect of the One Euro, Savitzky-Golay and Median filters on a 3D pose">
   <br><em>MVGFormer on <code>band_pull_apart</code> (subject s03, seconds 5–10): ground truth, original prediction and the three filtered versions. The MPJVE shown is computed on this clip only.</em>
 </p>
