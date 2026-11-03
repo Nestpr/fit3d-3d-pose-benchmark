@@ -1,0 +1,13 @@
+preferred-citation:
+  type: article
+  title: "Comprehensive Evaluation of Monocular and Multi-view 3D Human Pose Estimation Models for Fitness Exercise Analysis"
+  authors:
+    - family-names: "Ortega"
+      given-names: "Néstor"
+    - family-names: "Salgado"
+      given-names: "Agustín"
+    - family-names: "Sánchez"
+      given-names: "Javier"
+  journal: "arXiv preprint arXiv:2611.02929"
+  year: 2026
+  url: "https://arxiv.org/abs/2611.02929"
