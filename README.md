@@ -4,7 +4,7 @@
 ![Python](https://img.shields.io/badge/python-3.12-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.10-ee4c2c)
 
-Official code of the paper **"Comprehensive Evaluation of Monocular and Multi-view 3D Human Pose Estimation Models for Fitness Exercise Analysis"** (Néstor Ortega, Agustín Salgado, Javier Sánchez; CTIM–IUCES, University of Las Palmas de Gran Canaria). Paper under review (Pattern Recognition).
+Official code of the paper **"Comprehensive Evaluation of Monocular and Multi-view 3D Human Pose Estimation Models for Fitness Exercise Analysis"** (Néstor Ortega, Agustín Salgado, Javier Sánchez; CTIM–IUCES, University of Las Palmas de Gran Canaria). Preprint available on [arXiv:2611.02929](https://arxiv.org/abs/2611.02929).
 
 <p align="center">
   <img src="assets/graphical_abstract.png" width="900" alt="Evaluation pipeline: Fit3D, 2D keypoints, 3D lifting or multi-view reconstruction, temporal filtering and evaluation against mocap ground truth">
@@ -67,7 +67,7 @@ Key findings: the quality of the 2D detector is the dominant factor for monocula
 </p>
 
 <p align="center">
-  <img src="assets/filters_effect.gif" width="900" alt="Effect of the One Euro, Savitzky-Golay and Median filters on a 3D pose">
+  <img src="assets/mvgformer_s03_band_pull_apart_filters_5s-10s.gif" width="900" alt="Effect of the One Euro, Savitzky-Golay and Median filters on a 3D pose">
   <br><em>MVGFormer on <code>band_pull_apart</code> (subject s03, seconds 5–10): ground truth, original prediction and the three filtered versions. The MPJVE shown is computed on this clip only.</em>
 </p>
 
@@ -168,12 +168,14 @@ The One Euro filter acts on the arrays in their stored units (metres for TCPForm
 If you use this code, please cite the paper:
 
 ```bibtex
-@article{ortega2026fit3dbenchmark,
-  title   = {Comprehensive Evaluation of Monocular and Multi-view 3D Human Pose Estimation Models for Fitness Exercise Analysis},
-  author  = {Ortega, N{\'e}stor and Salgado, Agust{\'i}n and S{\'a}nchez, Javier},
-  journal = {Pattern Recognition},
-  year    = {2026},
-  note    = {Under review}
+@misc{ortega2026comprehensiveevaluationmonocularmultiview,
+      title={Comprehensive Evaluation of Monocular and Multi-view 3D Human Pose Estimation Models for Fitness Exercise Analysis},
+      author={Néstor Ortega and Agustín Salgado and Javier Sánchez},
+      year={2026},
+      eprint={2611.02929},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2611.02929},
 }
 ```
 
