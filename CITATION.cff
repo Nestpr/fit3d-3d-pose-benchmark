@@ -1,3 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the accompanying paper."
+title: "Fit3D 3D Pose Benchmark: monocular vs. multi-view 3D human pose estimation for fitness exercise analysis"
+type: software
+authors:
+  - family-names: "Ortega"
+    given-names: "Néstor"
+    affiliation: "CTIM–IUCES, University of Las Palmas de Gran Canaria"
+  - family-names: "Salgado"
+    given-names: "Agustín"
+    affiliation: "CTIM–IUCES, University of Las Palmas de Gran Canaria"
+  - family-names: "Sánchez"
+    given-names: "Javier"
+    affiliation: "CTIM–IUCES, University of Las Palmas de Gran Canaria"
+repository-code: "https://github.com/Nestpr/fit3d-3d-pose-benchmark"
+license: Apache-2.0
 preferred-citation:
   type: article
   title: "Comprehensive Evaluation of Monocular and Multi-view 3D Human Pose Estimation Models for Fitness Exercise Analysis"
