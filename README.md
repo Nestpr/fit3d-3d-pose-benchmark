@@ -52,7 +52,7 @@ Effect of temporal filtering on COMMON15 (RTMPose as 2D input for the monocular 
 | | Median | 69.563 | 2.905 |
 | PoseMamba-L | Original | 68.768 | 2.859 |
 | | One Euro | 68.769 | 2.859 |
-| | Savitzky–Golay | 68.768 | **2.856** |
+| | Savitzky–Golay | 68.767 | **2.856** |
 | | Median | 68.768 | 2.858 |
 | MVGFormer | Original | 66.691 | 26.458 |
 | | One Euro | 67.091 | 6.550 |
@@ -85,11 +85,18 @@ fit3d-3d-pose-benchmark/
 └── README.md
 ```
 
-Each notebook runs end-to-end in Google Colab, the environment used for the paper, and reads/writes everything under a single `STORAGE_ROOT` (by default `/content/drive/MyDrive`). Locally, set `STORAGE_ROOT` to any directory. Notebooks can be opened in Colab directly from GitHub (*File → Open notebook → GitHub*).
+Each notebook runs end-to-end in Google Colab, the environment used for the paper (recommended; *File → Open notebook → GitHub*), and reads/writes everything under a single `STORAGE_ROOT`. The notebooks detect the runtime automatically:
+
+| Runtime | `STORAGE_ROOT` (default) | Third-party code cloned to |
+|---|---|---|
+| Google Colab | `/content/drive/MyDrive` (Google Drive is mounted) | `/content/` |
+| Local (Jupyter / VS Code) | `./data` | `./external/` |
+
+Local execution is supported with the following requirements: notebooks 01–03 (model inference) need **Linux with an NVIDIA GPU** (PoseMamba and MVGFormer additionally require `nvcc` to compile their CUDA operators), whereas notebooks 04–05 (smoothing, evaluation, figures) run on any computer. `STORAGE_ROOT` can be edited in the configuration cell of each notebook.
 
 ## Requirements
 
-The experiments were run on Google Colab with **Python 3.12**, **PyTorch 2.10**, **CUDA 12.8** and a **Tesla T4** GPU. NumPy, SciPy, Pandas, Matplotlib and OpenCV are used for pose processing, filtering, evaluation and visualization.
+The experiments were run on Google Colab with **Python 3.12**, **PyTorch 2.10**, **CUDA 12.8** and a **Tesla T4** GPU. NumPy, SciPy, Pandas, Matplotlib and OpenCV are used for pose processing, filtering, evaluation and visualization. Notebook 03 was additionally tested on the Colab runtime of November 2026 (Python 3.13, PyTorch 2.11, CUDA 13.0, Tesla T4); it applies the compatibility patches that this runtime requires for the MVGFormer code and its CUDA operator.
 
 Every model has its own dependencies, so the notebooks install them independently:
 
@@ -131,7 +138,7 @@ Run the notebooks in order:
 
 1. **`00_prepare_2d_inputs`** – builds/validates the three 2D sources.
 2. **`01_tcpformer_inference`** and **`02_posemamba_inference`** – lift the 2D sequences to 3D. Sequences longer than 243 frames are processed with sliding windows (**window 243, stride 60**), fused with a strictly positive **Hann** weighting, with the last window anchored at the end of the sequence and pelvis root-centering applied after fusion. Run the three 2D sources (GT, YOLO-Pose, RTMPose) for each model.
-3. **`03_mvgformer_inference`** – multi-view, frame-wise reconstruction from the four cameras (960 × 540 network input with aspect-ratio-preserving affine transform).
+3. **`03_mvgformer_inference`** – multi-view, frame-wise reconstruction from the four cameras (960 × 540 network input with aspect-ratio-preserving affine transform). No ground truth is given to the model, and views are fused with `fuse_view_feats: 'mean'`, which does not depend on the number of cameras (the official configuration file lists `'cat_proj'` for the 5 cameras of Panoptic). All the tensors of the released checkpoint are loaded and none is ignored (see the notebook, Sections 3 and 4).
 4. **`04_temporal_smoothing`** – applies the One Euro, Savitzky–Golay and Median filters to the RTMPose-based monocular predictions and to MVGFormer. The final parameters (below) are used by default; the full parameter search can be re-run with `RUN_PARAMETER_SEARCH = True`. The notebook verifies every generated file and checks that PA-MPJPE and MPJVE reproduce the values reported above.
 5. **`05_evaluation_and_figures`** – generates the tables and figures of the paper.
 
