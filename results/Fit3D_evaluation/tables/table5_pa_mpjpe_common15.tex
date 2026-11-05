@@ -1,0 +1,15 @@
+\begin{table}[!htbp]
+\centering
+\caption{Mean PA-MPJPE (mm) per subject for TCPFormer, PoseMamba-L, and MVGFormer using the common 15-joint representation. The monocular models use RTMPose as 2D input.}
+\label{tab:pampjpe}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lccccccccc}
+\toprule
+Model / input & s03 & s04 & s05 & s07 & s08 & s09 & s10 & s11 & \textbf{Mean} \\
+\midrule
+TCPFormer -- RTMPose & 68.394 & 71.661 & 71.471 & 70.797 & 72.220 & 70.441 & 67.010 & 64.525 & \textbf{69.565} \\
+PoseMamba-L -- RTMPose & 68.922 & 74.654 & 68.557 & 68.321 & 71.521 & 69.209 & 64.481 & 64.475 & \textbf{68.768} \\
+MVGFormer (multi-view) & 61.680 & 60.302 & 67.724 & 70.707 & 77.148 & 71.247 & 55.809 & 68.969 & \textbf{66.698} \\
+\bottomrule
+\end{tabular}}
+\end{table}

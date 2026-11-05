@@ -1,0 +1,19 @@
+\begin{table}[!htbp]
+\centering
+\caption{Mean PA-MPJPE (mm) per subject for TCPFormer and PoseMamba-L using three 2D input sources, evaluated on their original 17-joint representation.}
+\label{tab:pampjpe_2d_sources}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lccccccccc}
+\toprule
+Model / input & s03 & s04 & s05 & s07 & s08 & s09 & s10 & s11 & \textbf{Mean} \\
+\midrule
+TCPFormer -- GT 2D & 42.17 & 50.01 & 42.02 & 45.91 & 52.15 & 39.92 & 49.56 & 47.50 & \textbf{46.16} \\
+TCPFormer -- YOLO-Pose & 87.51 & 94.17 & 95.19 & 103.65 & 95.48 & 90.15 & 97.90 & 84.70 & \textbf{93.59} \\
+TCPFormer -- RTMPose & 69.57 & 74.63 & 71.87 & 70.94 & 71.23 & 71.96 & 69.70 & 67.20 & \textbf{70.89} \\
+\addlinespace
+PoseMamba-L -- GT 2D & 34.87 & 45.79 & 34.07 & 36.76 & 38.78 & 31.30 & 39.83 & 35.57 & \textbf{37.12} \\
+PoseMamba-L -- YOLO-Pose & 78.67 & 85.79 & 82.50 & 94.17 & 85.16 & 80.35 & 92.53 & 75.32 & \textbf{84.31} \\
+PoseMamba-L -- RTMPose & 71.55 & 77.06 & 69.36 & 69.05 & 71.75 & 72.13 & 69.43 & 68.81 & \textbf{71.14} \\
+\bottomrule
+\end{tabular}}
+\end{table}

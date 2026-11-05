@@ -1,0 +1,26 @@
+\begin{table}[!htbp]
+\centering
+\caption{Comparison of mean PA-MPJPE (mm) per subject and model, before and after temporal filtering, evaluated on the common 15-joint skeleton (COMMON15). TCPFormer and PoseMamba-L use the RTMPose detections as 2D input.}
+\label{tab:pampjpe_filtering}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lccccccccc}
+\toprule
+Model / version & s03 & s04 & s05 & s07 & s08 & s09 & s10 & s11 & \textbf{Mean} \\
+\midrule
+TCPFormer -- Original & 68.394 & 71.661 & 71.471 & 70.797 & 72.220 & 70.441 & 67.010 & 64.525 & \textbf{69.565} \\
+TCPFormer -- One Euro filter & 68.560 & 71.779 & 71.621 & 70.897 & 72.427 & 70.552 & 67.194 & 64.679 & \textbf{69.713} \\
+TCPFormer -- Savitzky--Golay filter & 68.386 & 71.651 & 71.460 & 70.787 & 72.212 & 70.431 & 67.001 & 64.511 & \textbf{69.555} \\
+TCPFormer -- Median filter & 68.394 & 71.661 & 71.470 & 70.794 & 72.220 & 70.439 & 67.008 & 64.517 & \textbf{69.563} \\
+\addlinespace
+PoseMamba-L -- Original & 68.922 & 74.654 & 68.557 & 68.321 & 71.521 & 69.209 & 64.481 & 64.475 & \textbf{68.768} \\
+PoseMamba-L -- One Euro filter & 68.923 & 74.656 & 68.555 & 68.318 & 71.526 & 69.207 & 64.485 & 64.478 & \textbf{68.769} \\
+PoseMamba-L -- Savitzky--Golay filter & 68.922 & 74.654 & 68.557 & 68.321 & 71.521 & 69.209 & 64.481 & 64.475 & \textbf{68.767} \\
+PoseMamba-L -- Median filter & 68.923 & 74.654 & 68.557 & 68.321 & 71.521 & 69.209 & 64.481 & 64.475 & \textbf{68.768} \\
+\addlinespace
+MVGFormer -- Original & 61.680 & 60.302 & 67.724 & 70.707 & 77.148 & 71.247 & 55.809 & 68.969 & \textbf{66.698} \\
+MVGFormer -- One Euro filter & 63.150 & 60.748 & 67.726 & 70.766 & 76.539 & 71.101 & 58.285 & 68.415 & \textbf{67.091} \\
+MVGFormer -- Savitzky--Golay filter & 56.937 & 56.006 & 62.148 & 66.700 & 72.272 & 66.835 & 52.274 & 63.644 & \textbf{62.102} \\
+MVGFormer -- Median filter & 55.898 & 55.140 & 59.776 & 65.407 & 70.535 & 63.953 & 50.397 & 61.973 & \textbf{60.385} \\
+\bottomrule
+\end{tabular}}
+\end{table}

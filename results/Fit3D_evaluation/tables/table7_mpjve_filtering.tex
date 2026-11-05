@@ -1,0 +1,26 @@
+\begin{table}[!htbp]
+\centering
+\caption{Mean Per-Joint Velocity Error (MPJVE, mm/frame) with respect to the ground truth per subject, comparing the original predictions with the One Euro, Savitzky--Golay and Median filters, evaluated on the common 15-joint skeleton. TCPFormer and PoseMamba-L use RTMPose as 2D input.}
+\label{tab:mpjve_filtering}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lccccccccc}
+\toprule
+Model / version & s03 & s04 & s05 & s07 & s08 & s09 & s10 & s11 & \textbf{Mean} \\
+\midrule
+TCPFormer -- Original & 2.823 & 2.867 & 3.216 & 3.047 & 3.325 & 2.685 & 2.925 & 2.659 & \textbf{2.943} \\
+TCPFormer -- One Euro filter & 2.803 & 2.848 & 3.187 & 3.011 & 3.323 & 2.632 & 2.887 & 2.608 & \textbf{2.913} \\
+TCPFormer -- Savitzky--Golay filter & 2.764 & 2.825 & 3.149 & 2.972 & 3.285 & 2.592 & 2.847 & 2.557 & \textbf{2.874} \\
+TCPFormer -- Median filter & 2.792 & 2.848 & 3.184 & 3.007 & 3.308 & 2.627 & 2.880 & 2.593 & \textbf{2.905} \\
+\addlinespace
+PoseMamba-L -- Original & 2.774 & 2.824 & 3.136 & 2.938 & 3.240 & 2.578 & 2.841 & 2.539 & \textbf{2.859} \\
+PoseMamba-L -- One Euro filter & 2.775 & 2.824 & 3.136 & 2.938 & 3.241 & 2.578 & 2.841 & 2.539 & \textbf{2.859} \\
+PoseMamba-L -- Savitzky--Golay filter & 2.771 & 2.821 & 3.133 & 2.936 & 3.238 & 2.575 & 2.838 & 2.536 & \textbf{2.856} \\
+PoseMamba-L -- Median filter & 2.774 & 2.823 & 3.136 & 2.938 & 3.240 & 2.578 & 2.840 & 2.538 & \textbf{2.858} \\
+\addlinespace
+MVGFormer -- Original & 26.014 & 23.492 & 28.963 & 26.565 & 27.800 & 27.443 & 23.059 & 28.332 & \textbf{26.458} \\
+MVGFormer -- One Euro filter & 6.646 & 5.769 & 7.449 & 6.277 & 7.081 & 6.521 & 5.552 & 7.103 & \textbf{6.550} \\
+MVGFormer -- Savitzky--Golay filter & 4.696 & 4.407 & 5.393 & 4.910 & 5.509 & 4.872 & 4.228 & 5.228 & \textbf{4.905} \\
+MVGFormer -- Median filter & 4.056 & 3.860 & 4.642 & 4.326 & 4.708 & 3.950 & 3.881 & 4.116 & \textbf{4.192} \\
+\bottomrule
+\end{tabular}}
+\end{table}
