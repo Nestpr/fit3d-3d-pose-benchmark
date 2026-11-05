@@ -40,7 +40,7 @@ Mean PA-MPJPE (mm) over the 8 training subjects and 28 non-warm-up exercises (22
 | PoseMamba-L – GT 2D | 37.12 | – |
 | PoseMamba-L – YOLO-Pose | 84.32 | – |
 | PoseMamba-L – RTMPose | 71.14 | 68.77 |
-| MVGFormer (multi-view) | – | 66.69 |
+| MVGFormer (multi-view) | – | 66.70 |
 
 Effect of temporal filtering on COMMON15 (RTMPose as 2D input for the monocular models):
 
@@ -54,10 +54,12 @@ Effect of temporal filtering on COMMON15 (RTMPose as 2D input for the monocular 
 | | One Euro | 68.769 | 2.859 |
 | | Savitzky–Golay | 68.767 | **2.856** |
 | | Median | 68.768 | 2.858 |
-| MVGFormer | Original | 66.691 | 26.458 |
+| MVGFormer | Original | 66.698 | 26.458 |
 | | One Euro | 67.091 | 6.550 |
 | | Savitzky–Golay | 62.102 | 4.905 |
 | | Median | **60.385** | **4.192** |
+
+> **Note.** The notebooks of this repository give 66.698 mm for the original MVGFormer predictions. The arXiv version of the paper lists 66.691 mm in Tables 5 and 6 for these predictions, computed with a Procrustes variant that also applies the reflection correction to the scale; the difference is below 0.02 mm per subject. All other values coincide with the paper.
 
 Key findings: the quality of the 2D detector is the dominant factor for monocular lifting; MVGFormer has the lowest average spatial error but degrades on floor exercises and is far less temporally consistent; filtering reduces the MVGFormer velocity error by 84 % (and also its PA-MPJPE with the Median filter) while the gains for the monocular models are small.
 
@@ -71,14 +73,14 @@ Key findings: the quality of the 2D detector is the dominant factor for monocula
 ```text
 fit3d-3d-pose-benchmark/
 ├── notebooks/
-│   ├── 00_prepare_2d_inputs.ipynb       # GT 2D projection, YOLO-Pose extraction, RTMPose format check
+│   ├── 00_prepare_2d_inputs.ipynb       # GT 2D projection, YOLO-Pose extraction, RTMPose validation
 │   ├── 01_tcpformer_inference.ipynb     # TCPFormer inference (overlap + Hann) and evaluation
 │   ├── 02_posemamba_inference.ipynb     # PoseMamba-L inference (overlap + Hann) and evaluation
 │   ├── 03_mvgformer_inference.ipynb     # MVGFormer multi-view inference and evaluation
 │   ├── 04_temporal_smoothing.ipynb      # Filter parameter search, filtered predictions, verification
 │   └── 05_evaluation_and_figures.ipynb  # Paper tables and figures
 ├── assets/                              # Images used in this README
-├── results/                             # Per-sequence metrics (CSV) and a subset of 3D predictions
+├── results/                             # Per-sequence metrics (CSV) and the tables of the paper
 ├── requirements/                        # One requirements file per environment
 ├── LICENSE
 ├── CITATION.cff
@@ -92,7 +94,7 @@ Each notebook runs end-to-end in Google Colab, the environment used for the pape
 | Google Colab | `/content/drive/MyDrive` (Google Drive is mounted) | `/content/` |
 | Local (Jupyter / VS Code) | `./data` | `./external/` |
 
-Local execution is supported with the following requirements: notebooks 01–03 (model inference) need **Linux with an NVIDIA GPU** (PoseMamba and MVGFormer additionally require `nvcc` to compile their CUDA operators), whereas notebooks 04–05 (smoothing, evaluation, figures) run on any computer. `STORAGE_ROOT` can be edited in the configuration cell of each notebook.
+Local execution is supported with the following requirements: notebooks 01–03 (model inference) need **Linux with an NVIDIA GPU** (PoseMamba and MVGFormer additionally require `nvcc` to compile their CUDA operators), whereas notebooks 04–05 (smoothing, evaluation, figures) run on any computer after `pip install -r requirements/analysis.txt`. `STORAGE_ROOT` can be edited in the configuration cell of each notebook.
 
 ## Requirements
 
@@ -106,7 +108,7 @@ Every model has its own dependencies, so the notebooks install them independentl
 | `01_tcpformer_inference` | TCPFormer source code and Human3.6M checkpoint (243 frames) |
 | `02_posemamba_inference` | PoseMamba source code, compiled `selective_scan` CUDA kernels, PoseMamba-L checkpoint |
 | `03_mvgformer_inference` | MVGFormer source code, compiled deformable-attention CUDA operator, released checkpoint |
-| `04_temporal_smoothing`, `05_evaluation_and_figures` | NumPy, SciPy, Pandas, Matplotlib (no GPU) |
+| `04_temporal_smoothing`, `05_evaluation_and_figures` | NumPy, SciPy, Pandas, Matplotlib (no GPU); see `requirements/analysis.txt` |
 
 > **Checkpoints and third-party code are not redistributed here.** Download them from the repositories of the original authors and follow their licenses. The notebooks indicate where each file must be placed.
 
@@ -126,9 +128,9 @@ MyDrive/
 ```
 
 3. **2D inputs.** All monocular experiments use camera **65906101**, which provides a predominantly frontal view.
-   - *Ground-truth 2D:* projection of the 3D ground truth with the camera calibration (`00_prepare_2d_inputs`).
-   - *YOLO-Pose:* extracted from the videos with Ultralytics (`00_prepare_2d_inputs`).
-   - *RTMPose:* MMPose-style JSON files, one per sequence: a list of frames, each with a `frame_id` and its `instances` (`keypoints`, `keypoint_scores`, `bbox_score`) in COCO-17 order. The instance with the highest `bbox_score` is used, and frames without detections repeat the last valid pose. The detections are provided as input data; `00_prepare_2d_inputs` documents this format and validates the files.
+   - *Ground-truth 2D:* projection of the 3D ground truth with the camera calibration (pinhole model with the `intrinsics_wo_distortion` block of the Fit3D calibration files; `00_prepare_2d_inputs`).
+   - *YOLO-Pose:* extracted from the videos with Ultralytics, checkpoint `yolov8n-pose.pt` (`00_prepare_2d_inputs`).
+   - *RTMPose:* MMPose-style JSON files, one per sequence: a list of frames, each with a `frame_id` and its `instances` (`keypoints`, `keypoint_scores`, `bbox_score`) in COCO-17 order. The instance with the highest `bbox_score` is used, and frames without detections repeat the last valid pose. The detections are provided as input data; `00_prepare_2d_inputs` documents this format and validates the files, and can optionally generate equivalent files with `rtmlib` (not identical to the ones used in the paper).
 
 Detections in COCO-17 are converted to the 17-joint Human3.6M-like layout used by the lifting models (pelvis, neck and spine are computed as midpoints) and normalized following each model's input convention.
 
@@ -140,7 +142,7 @@ Run the notebooks in order:
 2. **`01_tcpformer_inference`** and **`02_posemamba_inference`** – lift the 2D sequences to 3D. Sequences longer than 243 frames are processed with sliding windows (**window 243, stride 60**), fused with a strictly positive **Hann** weighting, with the last window anchored at the end of the sequence and pelvis root-centering applied after fusion. Run the three 2D sources (GT, YOLO-Pose, RTMPose) for each model.
 3. **`03_mvgformer_inference`** – multi-view, frame-wise reconstruction from the four cameras (960 × 540 network input with aspect-ratio-preserving affine transform). No ground truth is given to the model, and views are fused with `fuse_view_feats: 'mean'`, which does not depend on the number of cameras (the official configuration file lists `'cat_proj'` for the 5 cameras of Panoptic). All the tensors of the released checkpoint are loaded and none is ignored (see the notebook, Sections 3 and 4).
 4. **`04_temporal_smoothing`** – applies the One Euro, Savitzky–Golay and Median filters to the RTMPose-based monocular predictions and to MVGFormer. The final parameters (below) are used by default; the full parameter search can be re-run with `RUN_PARAMETER_SEARCH = True`. The notebook verifies every generated file and checks that PA-MPJPE and MPJVE reproduce the values reported above.
-5. **`05_evaluation_and_figures`** – generates the tables and figures of the paper.
+5. **`05_evaluation_and_figures`** – generates Tables 4–7 (CSV and LaTeX) and the figures of the paper (PNG and PDF) under `STORAGE_ROOT/Fit3D_evaluation/{tables,figures,csv}`, and checks every table against the values published in the paper (8 checks; the final cell reports `8 of 8 checks passed` when all of them reproduce). Table 4 and Figs. 4–5 need the 2D-source runs of notebooks 01 and 02 (GT 2D, YOLO-Pose and RTMPose); the other sections only need the RTMPose runs and the output of notebook 04. The viewing angles of the 3D figures (Figs. 7 and 11) are configurable at the top of the notebook.
 
 ### Filter parameters
 
@@ -163,7 +165,7 @@ The One Euro filter acts on the arrays in their stored units (metres for TCPForm
 
 ## Provided results
 
-`results/` contains the per-sequence metrics (CSV) behind every table and a subset of the 3D predictions used in the temporal-smoothing experiments. The complete set of predictions can be regenerated with the notebooks.
+`results/` contains the per-sequence metrics (CSV) behind every table of the paper and the generated tables (CSV and LaTeX); see [`results/README.md`](results/README.md) for the description of each file. The 3D predictions are not included and can be regenerated with the notebooks. Copying `results/Fit3D_TCPFormer` and `results/Fit3D_PoseMamba` to `STORAGE_ROOT` is enough to reproduce Table 4 and Figs. 4 and 5 with notebook 05 without running any model.
 
 ## Citation
 
