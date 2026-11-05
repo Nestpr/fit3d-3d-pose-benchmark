@@ -84,6 +84,7 @@ fit3d-3d-pose-benchmark/
 │   └── 05_evaluation_and_figures.ipynb  # Paper tables and figures
 ├── assets/                              # Images used in this README
 ├── results/                             # Per-sequence metrics (CSV) and the tables of the paper
+├── sample_predictions/                  # 3D predictions of two sequences (s03), original and filtered
 ├── requirements/                        # One requirements file per environment
 ├── LICENSE
 ├── CITATION.cff
@@ -169,7 +170,7 @@ The One Euro filter acts on the arrays in their stored units (metres for TCPForm
 
 ## Provided results
 
-`results/` contains the per-sequence metrics (CSV) behind every table of the paper and the generated tables (CSV and LaTeX); see [`results/README.md`](results/README.md) for the description of each file. The 3D predictions are not included and can be regenerated with the notebooks. Copying `results/Fit3D_TCPFormer` and `results/Fit3D_PoseMamba` to `STORAGE_ROOT` is enough to reproduce Table 4 and Figs. 4 and 5 with notebook 05 without running any model.
+`results/` contains the per-sequence metrics (CSV) behind every table of the paper and the generated tables (CSV and LaTeX); see [`results/README.md`](results/README.md) for the description of each file. The full set of 3D predictions is not included and can be regenerated with the notebooks; `sample_predictions/` contains the predictions of two sequences (original and filtered), see [`sample_predictions/README.md`](sample_predictions/README.md). Copying `results/Fit3D_TCPFormer` and `results/Fit3D_PoseMamba` to `STORAGE_ROOT` is enough to reproduce Table 4 and Figs. 4 and 5 with notebook 05 without running any model.
 
 ## Citation
 
