@@ -59,7 +59,10 @@ Effect of temporal filtering on COMMON15 (RTMPose as 2D input for the monocular 
 | | Savitzky–Golay | 62.102 | 4.905 |
 | | Median | **60.385** | **4.192** |
 
-> **Note.** The notebooks of this repository give 66.698 mm for the original MVGFormer predictions. The arXiv version of the paper lists 66.691 mm in Tables 5 and 6 for these predictions, computed with a Procrustes variant that also applies the reflection correction to the scale; the difference is below 0.02 mm per subject. All other values coincide with the paper.
+> **Known differences with the arXiv version of the paper.** The notebooks recompute every table from the per-sequence results; three values differ slightly from the printed ones and none affects a conclusion:
+> 1. *MVGFormer, original predictions (Tables 5 and 6):* 66.698 mm here vs. 66.691 mm in the paper. The paper value was computed with a Procrustes variant that also applies the reflection correction to the scale; the notebooks use the convention of the evaluation in notebooks 01 to 03 (sum of the singular values without changing the sign). The difference is below 0.02 mm per subject; the gaps to PoseMamba-L and TCPFormer quoted in Section 4.5 become about 2.07 and 2.87 mm instead of 2.078 and 2.875 mm.
+> 2. *YOLO-Pose rows of Table 4:* differences of up to 0.04 mm (for example PoseMamba-L, s04: 85.79 here vs. 85.83; TCPFormer mean: 93.59 vs. 93.61). The GT 2D and RTMPose rows agree to within 0.01 mm.
+> 3. *Savitzky–Golay MPJVE reduction of TCPFormer (Sections 4.6 and 5):* 2.36 % from the values of Table 7 (2.943 to 2.874 mm/frame) vs. 2.34 % in the text.
 
 Key findings: the quality of the 2D detector is the dominant factor for monocular lifting; MVGFormer has the lowest average spatial error but degrades on floor exercises and is far less temporally consistent; filtering reduces the MVGFormer velocity error by 84 % (and also its PA-MPJPE with the Median filter) while the gains for the monocular models are small.
 
@@ -159,6 +162,7 @@ The One Euro filter acts on the arrays in their stored units (metres for TCPForm
 ## Evaluation protocol
 
 - **Skeletons.** TCPFormer and PoseMamba-L use a 17-joint skeleton; MVGFormer a 15-joint one. Joint-wise comparison uses **COMMON15**, which keeps the anatomically corresponding joints (Pelvis, Hips, Knees, Ankles, Neck, Nose, Shoulders, Elbows, Wrists) and discards Spine and Head.
+- **Left/right convention.** The left/right labelling of the Fit3D ground truth differs from that of the evaluated models. The legs of the ground truth (and of the 2D keypoints projected from it) are exchanged for TCPFormer and PoseMamba-L, and the arms of the ground truth for MVGFormer (`swap_legs` in notebooks 01 and 02, `swap_arms_common15` in notebook 03). Without this exchange the left and right limbs of the predictions would be compared with the opposite limbs of the ground truth.
 - **PA-MPJPE** – mean joint error after per-frame Procrustes alignment (spatial accuracy).
 - **MPJVE** – mean norm of the difference between predicted and ground-truth per-joint frame-to-frame displacements, in mm/frame, pelvis-centred, without Procrustes alignment or scale normalization. Because it compares velocity vectors, it is computed in a consistent frame: the monocular predictions are expressed in the frame of camera 65906101 and MVGFormer in the world frame.
 - **Mean-velocity plots** – a single body-scale factor per sequence (ratio of mean bone lengths, ground truth over original prediction) is applied to original and filtered predictions; this normalization is not used for MPJVE.
