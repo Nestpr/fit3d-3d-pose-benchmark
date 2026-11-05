@@ -1,0 +1,7 @@
+# Notebooks 04_temporal_smoothing and 05_evaluation_and_figures (any computer, no GPU).
+# Lower bounds of the versions the code relies on; the paper results were produced on Google Colab.
+numpy>=1.24
+scipy>=1.10
+pandas>=2.0
+matplotlib>=3.7
+jupyterlab>=4.0

@@ -1,0 +1,7 @@
+# Notebook 00_prepare_2d_inputs (YOLO-Pose extraction needs a GPU for reasonable speed).
+-r analysis.txt
+opencv-python>=4.8
+ultralytics>=8.3
+# Optional, only to generate RTMPose detections (RUN_RTMPOSE_GENERATION = True):
+# rtmlib
+# onnxruntime
