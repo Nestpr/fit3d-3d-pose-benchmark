@@ -133,9 +133,15 @@ MyDrive/
 3. **2D inputs.** All monocular experiments use camera **65906101**, which provides a predominantly frontal view.
    - *Ground-truth 2D:* projection of the 3D ground truth with the camera calibration (pinhole model with the `intrinsics_wo_distortion` block of the Fit3D calibration files; `00_prepare_2d_inputs`).
    - *YOLO-Pose:* extracted from the videos with Ultralytics, checkpoint `yolov8n-pose.pt` (`00_prepare_2d_inputs`).
-   - *RTMPose:* MMPose-style JSON files, one per sequence: a list of frames, each with a `frame_id` and its `instances` (`keypoints`, `keypoint_scores`, `bbox_score`) in COCO-17 order. The instance with the highest `bbox_score` is used, and frames without detections repeat the last valid pose. The detections are provided as input data; `00_prepare_2d_inputs` documents this format and validates the files, and can optionally generate equivalent files with `rtmlib` (not identical to the ones used in the paper).
+   - *RTMPose:* MMPose-style JSON files, one per sequence: a list of frames, each with a `frame_id` and its `instances` (`keypoints`, `keypoint_scores`, `bbox_score`) in COCO-17 order. The instance with the highest `bbox_score` is used, and frames without detections repeat the last valid pose. The detections used in the paper are published in the Zenodo record (see *Pre-computed data* below); `00_prepare_2d_inputs` documents this format and validates the files, and can optionally generate equivalent files with `rtmlib` (not identical to the ones used in the paper).
 
 Detections in COCO-17 are converted to the 17-joint Human3.6M-like layout used by the lifting models (pelvis, neck and spine are computed as midpoints) and normalized following each model's input convention.
+
+### Pre-computed data (Zenodo)
+
+The 2D keypoints of RTMPose and YOLO-Pose, the 3D predictions of the three models (224 sequences each, three 2D sources for the monocular models) and the filtered predictions are published at Zenodo: [`10.5281/zenodo.24095393`](https://doi.org/10.5281/zenodo.24095393). Extract the ZIP files of the record in `STORAGE_ROOT`; they recreate the folders described above (`Fit3D_2D/`, `Fit3D_TCPFormer/`, `Fit3D_PoseMamba/`, `Fit3D_MVGFormer/`, `Fit3D_temporal_filtering/`), and the record README lists the content and formats of each file.
+
+With these files and the Fit3D ground truth and calibration, notebooks `04` and `05` run without a GPU and without running the models (notebooks `01` to `03`). The ground-truth 2D projection (`poses2d_gt`) is not included in the record; `00_prepare_2d_inputs` regenerates it exactly. The Fit3D videos, ground truth and calibration are not redistributed and must be requested at <https://fit3d.imar.ro>.
 
 ## Reproducing the paper
 
@@ -169,7 +175,7 @@ The One Euro filter acts on the arrays in their stored units (metres for TCPForm
 
 ## Provided results
 
-`results/` contains the per-sequence metrics (CSV) behind every table of the paper and the generated tables (CSV and LaTeX); see [`results/README.md`](results/README.md) for the description of each file. The 3D predictions are not included and can be regenerated with the notebooks. Copying `results/Fit3D_TCPFormer` and `results/Fit3D_PoseMamba` to `STORAGE_ROOT` is enough to reproduce Table 4 and Figs. 4 and 5 with notebook 05 without running any model.
+`results/` contains the per-sequence metrics (CSV) behind every table of the paper and the generated tables (CSV and LaTeX); see [`results/README.md`](results/README.md) for the description of each file. The 3D predictions are published in the Zenodo record [`10.5281/zenodo.24095393`](https://doi.org/10.5281/zenodo.24095393) (see *Pre-computed data*) and can also be regenerated with the notebooks. Copying `results/Fit3D_TCPFormer` and `results/Fit3D_PoseMamba` to `STORAGE_ROOT` is enough to reproduce Table 4 and Figs. 4 and 5 with notebook 05 without running any model.
 
 ## Citation
 
@@ -187,11 +193,24 @@ If you use this code, please cite the paper:
 }
 ```
 
+The data of the Zenodo record can be cited as:
+
+```bibtex
+@dataset{ortega2026fit3ddata,
+  author    = {Ortega, Néstor and Salgado, Agustín and Sánchez, Javier},
+  title     = {Data for "Comprehensive Evaluation of Monocular and Multi-view 3D Human Pose Estimation Models for Fitness Exercise Analysis"},
+  year      = {2026},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.24095393},
+  url       = {https://doi.org/10.5281/zenodo.24095393},
+}
+```
+
 Please also cite Fit3D ([AIFit, CVPR 2021](https://doi.org/10.1109/cvpr46437.2021.00979)) and the original papers of the evaluated models and detectors.
 
 ## License
 
-The code in this repository is released under the [Apache License 2.0](LICENSE). Fit3D is distributed under its own academic license, and the third-party models, checkpoints and detectors keep the licenses of their original authors.
+The code in this repository is released under the [Apache License 2.0](LICENSE). The data published at Zenodo have their own license, indicated in the record. Fit3D is distributed under its own academic license, and the third-party models, checkpoints and detectors keep the licenses of their original authors.
 
 ## Acknowledgements
 
